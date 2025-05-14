@@ -6,9 +6,7 @@
 원티드: React 기반, JS 렌더링 + 무한스크롤 => Selenium
 사람인: HTML 기반이긴 한데, URL 파라미터가 좀 복잡 => requests + BeautifulSoup
 
-상세 페이지는 크롤링을 하진 않고, 그냥 URL 정도만 따놓음. 일단 메인 페이지(목록 페이지) 정보 크롤링
-
-- 상세페이지 크롤링 예정!
+상세 페이지는 크롤링을 하진 않고, 그냥 URL 정도만 따놓음. 일단 메인 페이지(목록 페이지) 정보 크롤링 => 상세페이지 크롤링 예정!
 
 잡코리아의 경우에는 검색창에서 검색할 때랑, navbar에 있는 카테고리(필터링) 기능 이용해서 들어갈 때랑 태그들이 달라서 일단 검색창 검색 기준으로 구현함
 
@@ -19,3 +17,6 @@
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 sudo apt update
 sudo apt install -y ./google-chrome-stable_current_amd64.deb
+
+상세페이지의 경우, 어차피 공고 목록에서 클릭해서 들어가는 방식일거고, 메인 페이지 크롤링 파트에서 상세페이지 URL 다 갖고 있기 때문에, 그거 이용해서 들어가는 방식으로 하면 될듯.
+결론적으로는 URL 넣으면 해당 페이지에 대한 크롤링 진행하는 방식으로 구현 예정(실제 사용시에는 공고 목록 클릭하면 해당 공고의 상세페이지 URL을 그대로 넣는 방식)

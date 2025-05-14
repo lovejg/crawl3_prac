@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from fake_useragent import UserAgent
 import time
+import datetime
 
 def crawl_wanted(keyword):
     options = Options()
@@ -33,6 +34,9 @@ def crawl_wanted(keyword):
 
         selector = 'div.JobCard_container__zQcZs'
         items = driver.find_elements(By.CSS_SELECTOR, selector)
+        
+        nowDate = datetime.datetime.now().strftime('%Y-%m-%d')
+        print(f"현재 날짜: {nowDate}")
 
         for item in items:
             try:

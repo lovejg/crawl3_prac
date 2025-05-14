@@ -16,10 +16,10 @@ for n in range(1, int(pageNum)+1):
         jobs = html.select('article.list-item')
         # print(len(jobs)) # 테스트 => 페이지당 20개씩 있음
         
+        nowDate = datetime.datetime.now().strftime('%Y-%m-%d')
+        print(f"현재 날짜: {nowDate}")
+        
         for job in jobs:
-            nowDate = datetime.datetime.now().strftime('%Y-%m-%d')
-            print(f"현재 날짜: {nowDate}")
-            
             company = job.select_one('a.corp-name-link').text.strip() # 회사 이름
             print(f"회사 이름: {company}")
             
