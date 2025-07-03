@@ -16,10 +16,10 @@ try:
     main = html.select_one("section.JobContent_descriptionWrapper__RMlfm")
     # print(main) # 테스트
     
-    nowDate = datetime.datetime.now().strftime('%Y-%m-%d')
+    nowDate = datetime.datetime.now().strftime('%Y-%m-%d') 
     print(f"현재 날짜: {nowDate}")
     
-    title = header.select_one("h1.wds-jtr30u").text.strip()
+    title = header.select_one("h1.wds-58fmok").text.strip()
     print(f"공고 제목: {title}")
     
     company = header.select_one("a.JobHeader_JobHeader__Tools__Company__Link__NoBQI").text.strip() # 회사 이름
@@ -31,21 +31,22 @@ try:
     career = header.select("span.JobHeader_JobHeader__Tools__Company__Info__b9P4Y")[1].text.strip() # 위치
     print(f"경력: {career}")
     
-    deadline = main.select_one("span.wds-lgio6k").text.strip() # 마감일
+    deadline = main.select_one("span.wds-1u1yyy").text.strip() # 마감일
     print(f"마감일: {deadline}")
     
-    detail_location = main.select_one("span.wds-1o4yxuk").text.strip() # 정확한 회사 위치
+    detail_location = main.select_one("span.wds-1td1qmv").text.strip() # 정확한 회사 위치
     print(f"정확한 회사 위치: {detail_location}")
+    print('\n')
     
-    position_detail = main.select("span.wds-wcfcu3")[0].text.strip()
+    position_detail = main.select("span.wds-h4ga6o")[0].text.strip()
     print(f"포지션 상세: {position_detail}")
     print('\n')
     
-    main_work = main.select("span.wds-wcfcu3")[1].text.strip()
+    main_work = main.select("span.wds-h4ga6o")[1].text.strip()
     print(f"주요업무: {main_work}")
     print('\n')
     
-    requirement = main.select("span.wds-wcfcu3")[2].text.strip()
+    requirement = main.select("span.wds-h4ga6o")[2].text.strip()
     print(f"자격요건: {requirement}")
             
 except Exception:

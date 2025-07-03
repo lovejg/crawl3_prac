@@ -30,7 +30,8 @@ try:
     print(f"공고 제목: {title}")
     
     career = main_info.select('strong.col_1')[0].text.strip()
-    print(f"경력: {career}")
+    career2 = main_info.select('span.tahoma')[0].text.strip()
+    print(f"경력: {career}({career2}년이상)")
     
     edu_career = main_info.select('strong.col_1')[1].text.strip()
     print(f"학력: {edu_career}")
@@ -127,13 +128,20 @@ try:
             print(f"홈페이지: {homepage}")
             
     
-    # 아래 메인 내용들(잡코리아가 가려놨는지 전혀 안됨)
-    # detail = detail_info.select_one('article.artReadStrategy')
-    
+    # 아래 메인 내용들은 document로 처리돼있는데 얘는 못가져올듯
+    # 아래처럼 링크까진 뽑아낼 수 있긴한데 실제로 가보면 걍 홈페이지로 리다이렉트 됨..(얘기해봐야 될듯?)
+    # detail = detail_info.select_one('iframe#gib_frame')
     # if detail:
-    #     text = detail.get_text(separator=' ', strip=True)
-    #     text = ' '.join(text.split())
-    #     print(text)
+    #     src_link = detail['src']
+    #     print(f"추출한 src 링크: {src_link}")
+
+    #     # 추출한 링크가 '/'로 시작하는 상대 경로이므로, 앞에 도메인을 붙여줘야 함
+    #     if src_link.startswith('/'):
+    #         base_url = "https://www.jobkorea.co.kr" # 사이트의 기본 도메인
+    #         full_url = base_url + src_link
+    #         print(f"전체 URL: {full_url}")
+    # else:
+    #     print("해당 iframe을 찾을 수 없습니다.")
             
 except Exception:
     pass
