@@ -26,13 +26,13 @@ def crawl_wanted(keyword):
         driver.get(url)
 
         print("원티드 페이지 로딩 중...")
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.JobCard_container__zQcZs')))
+        selector = 'div.JobCard_container__zQcZs'
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
         time.sleep(2)
 
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(2)
 
-        selector = 'div.JobCard_container__zQcZs'
         items = driver.find_elements(By.CSS_SELECTOR, selector)
         
         nowDate = datetime.datetime.now().strftime('%Y-%m-%d')
@@ -47,7 +47,7 @@ def crawl_wanted(keyword):
                     title = title_elem.get_attribute('textContent').strip()
 
                 # 회사명
-                company_elem = item.find_element(By.CSS_SELECTOR, 'span.JobCard_companyContent__lX5Lv')
+                company_elem = item.find_element(By.CSS_SELECTOR, 'span.wds-nkj4w6')
                 company = company_elem.text.strip()
                 if not company:
                     company = company_elem.get_attribute('textContent').strip()
