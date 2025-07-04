@@ -43,14 +43,10 @@ def crawl_wanted(keyword):
                 # 공고 제목
                 title_elem = item.find_element(By.CSS_SELECTOR, 'strong.JobCard_title___kfvj')
                 title = title_elem.text.strip()
-                if not title:
-                    title = title_elem.get_attribute('textContent').strip()
 
                 # 회사명
                 company_elem = item.find_element(By.CSS_SELECTOR, 'span.wds-nkj4w6')
                 company = company_elem.text.strip()
-                if not company:
-                    company = company_elem.get_attribute('textContent').strip()
 
                 # 상세페이지 URL
                 link_elem = item.find_element(By.TAG_NAME, 'a')
