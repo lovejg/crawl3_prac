@@ -1,6 +1,60 @@
 import requests
 from bs4 import BeautifulSoup
 import datetime
+# import sqlite3
+
+# def init_db():
+#     conn = sqlite3.connect('~.db') # '~.db' 파일명으로 DB 생성
+#     c = conn.cursor()
+    
+#     # 채용 공고 정보를 저장할 테이블 생성
+#     # IF NOT EXISTS를 사용하여 테이블이 없을 때만 생성하도록 함
+#     c.execute('''
+#         CREATE TABLE IF NOT EXISTS postings (
+#             id INTEGER PRIMARY KEY AUTOINCREMENT,
+#             company TEXT NOT NULL,
+#             title TEXT NOT NULL,
+#             url TEXT,
+#             career TEXT,
+#             education TEXT,
+#             job_type TEXT,
+#             location TEXT,
+#             deadline TEXT,
+#             benefits TEXT,
+#             apply_method TEXT,
+#             scraped_date DATE
+#         )
+#     ''')
+#     conn.commit()
+#     conn.close()
+
+# def save_to_db(data):
+#     conn = sqlite3.connect('~.db') # 아까 작명한 db 이름 여기에다가 잘 넣기
+#     c = conn.cursor()
+    
+#     # SQL INSERT 구문
+#     sql = '''
+#         INSERT INTO postings (company, title, url, career, education, job_type, location, deadline, benefits, apply_method, scraped_date)
+#         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+#     '''
+    
+#     # 데이터 삽입
+#     c.execute(sql, (
+#         data['company'],
+#         data['title'],
+#         data['url'],
+#         data['career'],
+#         data['education'],
+#         data['job_type'],
+#         data['location'],
+#         data['deadline'],
+#         data['benefits'],
+#         data['apply_method'],
+#         data['scraped_date']
+#     ))
+    
+#     conn.commit()
+#     conn.close()
 
 keyword = input("키워드 입력: ")
 pageNum = input("몇 페이지까지 출력할지(크롤링할지): ")
@@ -43,33 +97,52 @@ for n in range(1, int(pageNum)+1):
             if start_index != -1:
                 info_list = items[start_index:]
                 
-                if len(info_list) < 5:
-                    continue # 정보가 하나라도 부족하면 일단 해당 공고 패스
-                
-                career = info_list[0].text.strip() # 경력
-                edu_career = info_list[1].text.strip() # 학력
-                regular = info_list[2].text.strip() # 정규직 여부
-                location = info_list[3].text.strip() # 위치
-                deadline = info_list[4].text.strip() # 마감
+            if len(info_list) < 5:
+                continue # 정보가 하나라도 부족하면 일단 해당 공고 패스
+            
+            career = info_list[0].text.strip() # 경력
+            edu_career = info_list[1].text.strip() # 학력
+            regular = info_list[2].text.strip() # 정규직 여부
+            location = info_list[3].text.strip() # 위치
+            deadline = info_list[4].text.strip() # 마감
 
-                print(f"경력: {career}")
-                print(f"학력: {edu_career}")
-                print(f"정규직 여부: {regular}")
-                print(f"위치: {location}")
-                print(f"마감: {deadline}")
+            print(f"경력: {career}")
+            print(f"학력: {edu_career}")
+            print(f"정규직 여부: {regular}")
+            print(f"위치: {location}")
+            print(f"마감: {deadline}")
             
             benefit = job.select('span.Typography_variant_size13__344nw28') # 장점(태그) => 없는 공고들도 있음(빈 배열이면 없는거임)
             print("장점: ")
             for ben in benefit:
                 print(ben.text.strip())
+            # benefits = ', '.join([tag.text.strip() for ben in benefit]) if benefit else '' # DB에 넣으려면 정리를 해놔야됨
             
-        # 지원방식
+            # 지원방식
             apply = job.select_one('span.Flex_align_center__i0l0hl8').text.strip()
             print(f"지원 방식: {apply}")
             
              # 공고별 구분선
             print("-" * 20)
             print('\n')
+            
+            # job_data = {
+            #     'company': company,
+            #     'title': title,
+            #     'url': url,
+            #     'career': career,
+            #     'edu_career': edu_career,
+            #     'job_type': regular,
+            #     'location': location,
+            #     'deadline': deadline,
+            #     'benefits': benefits,
+            #     'apply_method': apply,
+            #     'scraped_date': nowDate
+            # }
+            
+            # # --- 5. DB 저장 함수 호출 ---
+            # save_to_db(job_data)
+            # print(f"[{company}] {title} ... 저장 완료")
                 
     except Exception:
         pass
