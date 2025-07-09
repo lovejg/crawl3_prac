@@ -27,11 +27,10 @@ def crawl_wanted(keyword):
 
         print("원티드 페이지 로딩 중...")
         selector = 'div.JobCard_container__zQcZs'
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
-        time.sleep(2)
-
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(2)
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, selector))) # 컨테이너 뼈대 로딩
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);") # 페이지 끝까지 스크롤해서 추가 데이터 요청(무한 스크롤 고려)
+        
+        time.sleep(3) # 스크롤 후 새로운 컨텐츠가 JS에 의해 채워질 시간을 기다리기
 
         items = driver.find_elements(By.CSS_SELECTOR, selector)
         
@@ -43,11 +42,12 @@ def crawl_wanted(keyword):
                 # 공고 제목
                 title_elem = item.find_element(By.CSS_SELECTOR, 'strong.JobCard_title___kfvj')
                 title = title_elem.text.strip()
-
-                # 회사명
-                company_elem = item.find_element(By.CSS_SELECTOR, 'span.wds-nkj4w6')
-                company = company_elem.text.strip()
-
+                
+                elements = item.find_elements(By.CSS_SELECTOR, 'span.wds-nkj4w6')
+                
+                company = elements[0].text.strip() # 회사명
+                career = elements[1].text.strip() # 경력
+                
                 # 상세페이지 URL
                 link_elem = item.find_element(By.TAG_NAME, 'a')
                 link = link_elem.get_attribute('href')
@@ -60,6 +60,7 @@ def crawl_wanted(keyword):
                 job_list.append({
                     '회사명': company,
                     '공고명': title,
+                    '경력': career,
                     '링크': link
                 })
 
@@ -94,7 +95,7 @@ def main():
     if wanted_jobs:
         print("\n=== 크롤링된 채용 정보 ===")
         for job in wanted_jobs:
-            print(f"회사명: {job['회사명']}\n공고 제목: {job['공고명']}\n상세페이지 URL: {job['링크']}\n")
+            print(f"회사명: {job['회사명']}\n공고 제목: {job['공고명']}\n경력: {job['경력']}\n상세페이지 URL: {job['링크']}\n")
     else:
         print("\n 크롤링된 데이터가 없습니다.")
 

@@ -12,10 +12,7 @@ try:
     # print(html) # 테스트
     
     main_info = html.select_one('section.secReadSummary')
-    detail_info = html.select_one('div.divDetailWrap')
     # print(main_info) # 테스트
-    # print(detail_info) # 테스트
-    test = html.select_one('.detailed-summary-contents')
     
     nowDate = datetime.datetime.now().strftime('%Y-%m-%d')
     print(f"현재 날짜: {nowDate}")
@@ -126,22 +123,6 @@ try:
             homepage_tag = dd.find('a')
             homepage = homepage_tag.get_text(strip=True) if homepage_tag else ''
             print(f"홈페이지: {homepage}")
-            
-    
-    # 아래 메인 내용들은 document로 처리돼있는데 얘는 못가져올듯
-    # 아래처럼 링크까진 뽑아낼 수 있긴한데 실제로 가보면 걍 홈페이지로 리다이렉트 됨..(얘기해봐야 될듯?)
-    # detail = detail_info.select_one('iframe#gib_frame')
-    # if detail:
-    #     src_link = detail['src']
-    #     print(f"추출한 src 링크: {src_link}")
-
-    #     # 추출한 링크가 '/'로 시작하는 상대 경로이므로, 앞에 도메인을 붙여줘야 함
-    #     if src_link.startswith('/'):
-    #         base_url = "https://www.jobkorea.co.kr" # 사이트의 기본 도메인
-    #         full_url = base_url + src_link
-    #         print(f"전체 URL: {full_url}")
-    # else:
-    #     print("해당 iframe을 찾을 수 없습니다.")
             
 except Exception:
     pass

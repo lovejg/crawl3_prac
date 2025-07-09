@@ -48,6 +48,18 @@ try:
     
     requirement = main.select("span.wds-h4ga6o")[2].text.strip()
     print(f"자격요건: {requirement}")
+    print('\n')
+    
+    prefer = main.select("span.wds-h4ga6o")[3].text.strip()
+    print(f"우대사항: {prefer}")
+    print('\n')
+    
+    benefit = main.select("span.wds-h4ga6o")[4].text.strip()
+    print(f"혜택 및 복지: {benefit}")
+    print('\n')
+    
+    recruit_type = main.select("span.wds-h4ga6o")[5].text.strip()
+    print(f"채용 전형: {recruit_type}")
             
 except Exception:
     pass
