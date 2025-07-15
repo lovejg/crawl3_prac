@@ -1,10 +1,8 @@
 # crawl_prac
 
-일단 잡코리아, 사람인, 원티드 크롤링 예정
-
 잡코리아: 대부분 정적 HTML, 일부는 JS 로딩 => requests + BeautifulSoup
 원티드: React 기반, JS 렌더링 + 무한스크롤 => Selenium
-사람인: HTML 기반이긴 한데, URL 파라미터가 좀 복잡 => requests + BeautifulSoup
+사람인: HTML 기반이긴 한데, URL 파라미터가 좀 복잡 => requests + BeautifulSoup (얘는 지금 밴 당해서 나는 테스트 불가능)
 
 상세 페이지는 크롤링을 하진 않고, 그냥 URL 정도만 따놓음. 일단 메인 페이지(목록 페이지) 정보 크롤링 => 상세페이지 크롤링 예정!
 
@@ -24,3 +22,7 @@ sudo apt install -y ./google-chrome-stable_current_amd64.deb
 잡코리아: 상세페이지를 못 가져옴(막아놨음)
 원티드: 뭔가뭔가 조금씩 문제가 있는데 잘 하면 해결 할 수 있을듯?(근데 일단 가져오긴 해. 에러 발생은 아니야)
 직행: 문제없는데, 상세페이지가 사진으로 돼있어서 못 가져옴
+
+카카오뱅크: 메인페이지는 requests로 가능하고, 상세페이지는 selenium 써야됨
+카카오: 메인페이지는 selenium 써야되고, 상세페이지는 requests로 가능
+카카오페이: 메인페이지는 requests로 가능하고, 상세페이지는 selenium 써야됨
