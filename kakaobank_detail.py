@@ -1,6 +1,5 @@
 import time
 import datetime
-from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -9,121 +8,105 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from fake_useragent import UserAgent
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
 def crawl_job_details(url):
     """
-    주어진 URL의 채용 공고 상세 정보를 크롤링하는 함수.
-    '상세정보 더보기'를 클릭하여 숨겨진 정보까지 모두 가져옵니다.
+    주어진 URL에서 채용 공고 상세 정보를 크롤링합니다.
     """
     options = Options()
-    options.add_argument("--headless")  # 브라우저 창을 띄우지 않음
+    options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--start-maximized")
     options.add_argument(f"user-agent={UserAgent().chrome}")
 
     driver = None
     job_details = {}  # 크롤링 결과를 담을 딕셔너리
 
     try:
-        # WebDriver 자동 설정 및 실행
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         driver.get(url)
-        print("페이지 로딩 중...")
-
-        # 주요 컨텐츠 영역이 로드될 때까지 대기
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "section.JobContent_JobContent__Qb6DR"))
-        )
-
-        try:
-            more_button = WebDriverWait(driver, 5).until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, "button.Button_Button__root__MS62F"))
-            )
-            
-            # 버튼이 화면에 보이도록 스크롤
-            driver.execute_script("arguments[0].scrollIntoView(true);", more_button)
-            time.sleep(1)
-            
-            # 클릭 시도
-            try:
-                more_button.click()
-            except:
-                # 일반 클릭이 안되면 JavaScript로 클릭
-                driver.execute_script("arguments[0].click();", more_button)
-            
-        except Exception:
-            print("'상세정보 더보기' 버튼을 찾지 못했거나 이미 내용이 모두 표시되어 있습니다.")
-
-        # 버튼 클릭 후 새로운 콘텐츠가 로드될 때까지 충분히 대기
-        time.sleep(3)
+        print("페이지로 이동 중...")
         
-        # 추가 콘텐츠가 로드되었는지 확인
-        try:
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "span.wds-h4ga6o"))
-            )
-            print("추가 콘텐츠 로드 완료")
-        except:
-            print("추가 콘텐츠 로드 대기 중 오류 발생")
+        main_container_selector = ".recruit_detail"
 
-        # 동적으로 로드된 전체 페이지 소스를 BeautifulSoup으로 파싱
-        html_source = driver.page_source
-        soup = BeautifulSoup(html_source, 'html.parser')
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, main_container_selector))
+        )
+        time.sleep(2) 
+        print("페이지 로딩 완료. 데이터 추출을 시작합니다.")
 
         # --- 데이터 추출 시작 ---
-        html = soup.select_one("section.JobContent_JobContent__Qb6DR")
-        header = html.select_one("header.JobHeader_JobHeader__TZkW3")
-        main = html.select_one("section.JobContent_descriptionWrapper__RMlfm")
-        
-        # 기본 정보 추출
-        job_details['공고 제목'] = header.select_one("h1.wds-58fmok").text.strip()
-        job_details['회사 이름'] = header.select_one("a.JobHeader_JobHeader__Tools__Company__Link__NoBQI").text.strip()
-        
-        company_info = header.select("span.JobHeader_JobHeader__Tools__Company__Info__b9P4Y")
-        job_details['위치'] = company_info[0].text.strip() if len(company_info) > 0 else '정보 없음'
-        job_details['경력'] = company_info[1].text.strip() if len(company_info) > 1 else '정보 없음'
-        
-        job_details['마감일'] = main.select_one("span.wds-1u1yyy").text.strip()
-        job_details['정확한 회사 위치'] = main.select_one("span.wds-1td1qmv").text.strip()
+        detail_container = driver.find_element(By.CSS_SELECTOR, main_container_selector)
 
-        # 상세 정보 (주요업무, 자격요건, 우대사항 등) 추출
-        details = main.select("span.wds-h4ga6o")
-        job_details['포지션 상세'] = details[0].text.strip() if len(details) > 0 else '정보 없음'
-        job_details['주요업무'] = details[1].text.strip() if len(details) > 1 else '정보 없음'
-        job_details['자격요건'] = details[2].text.strip() if len(details) > 2 else '정보 없음'
-        job_details['우대사항'] = details[3].text.strip() if len(details) > 3 else '정보 없음'
-        job_details['혜택 및 복지'] = details[4].text.strip() if len(details) > 4 else '정보 없음'
-        job_details['채용 전형'] = details[5].text.strip() if len(details) > 5 else '정보 없음'
+        # 1. 기본 정보 추출 (공고 제목, 분야, 마감일)
+        try:
+            job_details['공고 제목'] = detail_container.find_element(By.CSS_SELECTOR, 'h3.tit_intro').text.strip()
+        except NoSuchElementException:
+            job_details['공고 제목'] = "정보 없음"
+        
+        try:
+            job_details['분야'] = detail_container.find_element(By.CSS_SELECTOR, 'div.info_desc > span').text.strip()
+        except NoSuchElementException:
+            job_details['분야'] = "정보 없음"
+            
+        try:
+            job_details['마감일'] = detail_container.find_element(By.CSS_SELECTOR, 'div.item_card').text.strip()
+        except NoSuchElementException:
+            job_details['마감일'] = "정보 없음"
+
+        # 2. 상세 설명 섹션 추출 ('Recruiter Says', '담당할 업무' 등)
+        # 'desc_cont' 클래스를 가진 모든 설명 컨테이너를 찾음
+        desc_containers = detail_container.find_elements(By.CSS_SELECTOR, 'div.desc_cont')
+
+        for container in desc_containers:
+            try:
+                title = container.find_element(By.CSS_SELECTOR, 'div.tit').text.strip()
+                content = container.find_element(By.CSS_SELECTOR, 'div.cont').text.strip()
+
+                if not title or not content:
+                    continue
+                
+                job_details[title] = content
+            
+            except NoSuchElementException:
+                continue
         
         print("모든 정보 추출 완료.")
         return job_details
 
+    except TimeoutException:
+        print("페이지 로딩 시간 초과: 메인 컨텐츠를 찾을 수 없습니다.")
+        return None
     except Exception as e:
-        print(f"크롤링 실패: {e}")
+        print(f"크롤링 중 오류 발생: {e}")
         return None
 
     finally:
-        # 드라이버가 실행된 경우, 반드시 종료
         if driver:
             driver.quit()
 
 def main():
-    keyURL = input("URL 입력: ").strip()
-    print("크롤링을 시작합니다...\n")
+    keyURL = input("크롤링할 카카오뱅크 채용 공고 URL: ").strip()
+    print("\n크롤링을 시작합니다...")
 
     job_data = crawl_job_details(keyURL)
     
     nowDate = datetime.datetime.now().strftime('%Y-%m-%d')
 
-    print("\n" + "="*15 + " 크롤링 결과 " + "="*15)
+    print("\n" + "="*20 + " 크롤링 결과 " + "="*20)
     print(f"(조회 날짜: {nowDate})")
     
     if job_data:
         for key, value in job_data.items():
-            print(f"\n## {key}")
+            print("\n" + "-"*40)
+            print(f"✅ {key}")
+            print("-"*(len(key)+3))
             print(value)
+        print("\n" + "="*50)
     else:
-        print("\n크롤링된 데이터가 없습니다.")
+        print("\n크롤링된 데이터가 없습니다. URL을 확인해주세요.")
 
 
 if __name__ == "__main__":
