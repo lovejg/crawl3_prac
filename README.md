@@ -26,3 +26,9 @@ sudo apt install -y ./google-chrome-stable_current_amd64.deb
 카카오뱅크: 메인페이지는 requests로 가능하고, 상세페이지는 selenium 써야됨
 카카오: 메인페이지는 selenium 써야되고, 상세페이지는 requests로 가능
 카카오페이: 메인페이지는 requests로 가능하고, 상세페이지는 selenium 써야됨
+
+https://recruit.kakaobank.com/jobs(requests 쓰면 되고, recruitClassName=Fronted&recruitClassName=AI& 이런식으로recruitClassName=&붙여서 늘리면 됨)
+디테일은 selenium
+
+https://kakaopay.career.greetinghr.com/ko/main?occupations=%EA%B8%B0%EC%88%A0(requests로 가능)
+디테일은 selenium

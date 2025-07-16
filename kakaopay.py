@@ -1,76 +1,113 @@
-import requests
-from bs4 import BeautifulSoup
+import time
 import datetime
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+from fake_useragent import UserAgent
+from bs4 import BeautifulSoup
+from selenium.common.exceptions import TimeoutException
 
-keyword = input("키워드 입력: ")
-pageNum = input("몇 페이지까지 출력할지(크롤링할지): ")
-print(f"키워드 '{keyword}'로 채용정보 크롤링을 시작")
-print('\n')
+def crawl_kakaopay():
+    options = Options()
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument(f"user-agent={UserAgent().chrome}")
 
-for n in range(1, int(pageNum)+1):
+    driver = None
+    job_list = []
+
     try:
-        soup = requests.get('https://www.jobkorea.co.kr/Search/?stext={}&tabType=recruit&Page_No={}'.format(keyword, str(n)),
-                                                                                                            headers={'User-Agent': 'Mozilla/5.0'})
-        html = BeautifulSoup(soup.text, 'html.parser').select_one(".Tabs_content__1cw1bssi") # 상위 class 입력
-        # print(html) # 테스트
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        url = 'https://kakaopay.career.greetinghr.com/ko/main?occupations=기술'
         
-        jobs = html.select('.h7nnv10') # 각 요소별 클래스 입력
-        # print(len(jobs)) # 테스트 => 페이지당 20개씩 있음
-        
+        print("카카오페이 채용 정보 크롤링을 시작합니다.")
         nowDate = datetime.datetime.now().strftime('%Y-%m-%d')
-        print(f"현재 날짜: {nowDate}")
-        print('\n')
+        print(f"현재 날짜: {nowDate}\n")
         
-        for job in jobs:
-            company = job.select_one('span.Typography_variant_size16__344nw26').text.strip() # 회사 이름
-            print(f"회사 이름: {company}")
-            
-            title = job.select_one('a.h7nnv12').text.strip() # 공고 제목
-            print(f"공고 제목: {title}")
-            
-            url = job.find('a')['href'] # 상세페이지 url
-            print(f"상세페이지 URL: {url}")
-            
-            # 경력, 학력 등 각종 정보 뽑는 소스인데, 원래 간단했는데 이번에 뭔 ㅈ같은게 좀 추가돼서 처리하느냐고 ㅈㄴ 복잡해짐(경력이 [0]이 아니고 딴거인 경우가 생김)
-            # 그리고 양식 정확히 안 맞추고 정보가 한 두개씩 빠져있는 케이스도 있어서 그것도 처리해줘야 됨(일단은 해당 공고는 무시하고 넘기는걸로 처리함)
-            items = job.select('span.Typography_color_gray800__344nw2l')
-            start_index = -1
-            for i, item in enumerate(items):
-                if item.text.strip().startswith('경력'):
-                    start_index = i
-                    break
+        driver.get(url)
 
-            if start_index != -1:
-                info_list = items[start_index:]
-                
-            if len(info_list) < 5:
-                continue # 정보가 하나라도 부족하면 일단 해당 공고 패스
-            
-            career = info_list[0].text.strip() # 경력
-            edu_career = info_list[1].text.strip() # 학력
-            regular = info_list[2].text.strip() # 정규직 여부
-            location = info_list[3].text.strip() # 위치
-            deadline = info_list[4].text.strip() # 마감
+        list_item_selector = "ul.ffGmZN > a"
+        try:
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, list_item_selector))
+            )
+        except TimeoutException:
+            print("채용 공고를 찾을 수 없습니다. 페이지 구조가 변경되었거나 공고가 없습니다.")
+            return []
 
-            print(f"경력: {career}")
-            print(f"학력: {edu_career}")
-            print(f"정규직 여부: {regular}")
-            print(f"위치: {location}")
-            print(f"마감: {deadline}")
-            
-            benefit = job.select('span.Typography_variant_size13__344nw28') # 장점(태그) => 없는 공고들도 있음(빈 배열이면 없는거임)
-            print("장점: ")
-            for ben in benefit:
-                print(ben.text.strip())
-            # benefits = ', '.join([tag.text.strip() for ben in benefit]) if benefit else '' # DB에 넣으려면 정리를 해놔야됨
-            
-            # 지원방식
-            apply = job.select_one('span.Flex_align_center__i0l0hl8').text.strip()
-            print(f"지원 방식: {apply}")
-            
-             # 공고별 구분선
-            print("-" * 20)
-            print('\n')
+        # 페이지 끝까지 스크롤
+        last_height = driver.execute_script("return document.body.scrollHeight")
+        while True:
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(2)
+            new_height = driver.execute_script("return document.body.scrollHeight")
+            if new_height == last_height:
+                break
+            last_height = new_height
+
+        html = BeautifulSoup(driver.page_source, 'html.parser')
+        
+        items = html.select("ul.ffGmZN > a")
+
+        for item in items:
+            try:
+                base_url = "https://kakaopay.career.greetinghr.com"
+                link_suffix = item['href']
+                link = f"{base_url}{link_suffix}"
+
+                title = item.select_one('span.gMeHeg').text.strip()
+                info_items = item.select('.gAEjfw span')
+
+                career = "정보 없음"
+                work_type = "정보 없음"
+                # 상세 정보 파싱 (예외적인 '외' 글자 처리 포함)
+                for info in info_items:
+                    text = info.get_text(strip=True)
+                    if '년' in text or '신입' in text or '무관' in text:
+                        career = text
+                    elif '정규' in text or '계약' in text:
+                        work_type = text
                 
-    except Exception:
-        pass
+                job_list.append({
+                    '회사명': '카카오페이',
+                    '공고명': title,
+                    '경력': career,
+                    '근무형태': work_type,
+                    '링크': link
+                })
+
+            except Exception as e:
+                print(f"  ㄴ 개별 채용 정보 파싱 오류: {e}")
+                continue
+    
+    except Exception as e:
+        print(f"크롤링 프로세스 중 오류 발생: {e}")
+        return []
+
+    finally:
+        if driver:
+            driver.quit()
+            
+    print(f"\n카카오페이 크롤링 완료: 총 {len(job_list)}개의 공고를 수집했습니다.")
+    return job_list
+
+def main():
+    print("="*40)
+    kakaopay_jobs = crawl_kakaopay()
+    print("="*40)
+
+    if kakaopay_jobs:
+        print(f"\n[최종 크롤링 결과: {len(kakaopay_jobs)}개]\n")
+        for job in kakaopay_jobs:
+            print(f"회사명: {job['회사명']}\n공고명: {job['공고명']}\n경력: {job['경력']}\n근무형태: {job['근무형태']}\n링크: {job['링크']}\n")
+    else:
+        print("\n크롤링된 데이터가 없습니다.")
+
+
+if __name__ == "__main__":
+    main()
