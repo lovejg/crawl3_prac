@@ -40,21 +40,17 @@ def crawl_wanted(keyword):
         for item in items:
             try:
                 # 공고 제목
-                title = item.find_element(By.CSS_SELECTOR, 'strong.JobCard_title___kfvj').text.strip()
+                title_elem = item.find_element(By.CSS_SELECTOR, 'strong.JobCard_title___kfvj')
+                title = title_elem.get_attribute('textContent').strip()
                 
-                # 이 새끼들 자꾸 지랄나서 일단 뺐는데 똑같은듯
-                # elements = item.find_elements(By.CSS_SELECTOR, 'span.wds-nkj4w6')
-                # company = elements[0].text.strip() # 회사명
-                # career = elements[1].text.strip() # 경력
+                elements = item.find_elements(By.CSS_SELECTOR, 'span.wds-nkj4w6')
                 
-                # 회사명
-                company = item.find_element(By.CSS_SELECTOR, 'span.CompanyNameWithLocationPeriod_CompanyNameWithLocationPeriod__company__ByVLu').text.strip()
-                
-                # 경력
-                career = item.find_element(By.CSS_SELECTOR, 'span.CompanyNameWithLocationPeriod_CompanyNameWithLocationPeriod__location__4_w0l').text.strip()
+                company = elements[0].get_attribute('textContent').strip() # 회사명
+                career = elements[1].get_attribute('textContent').strip() # 경력
                 
                 # 상세페이지 URL
-                link = item.find_element(By.TAG_NAME, 'a').get_attribute('href')
+                link_elem = item.find_element(By.TAG_NAME, 'a')
+                link = link_elem.get_attribute('href')
 
                 # 중복 제거: 이미 본 링크면 skip
                 if link in seen_links:
