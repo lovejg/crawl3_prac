@@ -17,11 +17,10 @@ def crawl_kakaobank():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument(f"user-agent={UserAgent().chrome}")
 
-    driver = None  # 드라이버 변수 초기화
+    driver = None 
     job_list = []
-    processed_links = set()  # 중복 공고를 방지하기 위한 set
+    processed_links = set()  # 중복 공고 방지용 set
 
-    # ⭐️ 1. 드라이버를 반복문 시작 전에 한 번만 생성합니다.
     try:
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         
@@ -37,25 +36,24 @@ def crawl_kakaobank():
             driver.get(url)
 
             try:
-                # ⭐️ 2. 공고 목록이 나타날 때까지 최대 5초만 기다립니다.
                 selector = 'ul.list_board > li'
                 WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
                 items = driver.find_elements(By.CSS_SELECTOR, selector)
 
                 for item in items:
                     try:
-                        # 상세 페이지 링크를 먼저 가져와 중복 여부 확인
                         link = item.find_element(By.TAG_NAME, 'a').get_attribute('href')
                         if link in processed_links:
                             continue  # 이미 처리된 공고는 건너뛰기
                         processed_links.add(link)
 
-                        # ⭐️ 3. .splitlines() 대신 더 명확한 선택자로 정보를 가져옵니다.
-                        title = item.find_element(By.CSS_SELECTOR, '.tit_board').text.strip()
-                        details = item.find_elements(By.CSS_SELECTOR, '.txt_board')
+                        deadline_element = item.find_element(By.CSS_SELECTOR, '.tit_date')
+                        deadline = deadline_element.text.strip()
+
+                        title_full_text = item.find_element(By.CSS_SELECTOR, '.tit_board').text
+                        title = title_full_text.replace(deadline, '').strip()
                         
-                        deadline = details[0].text.strip() if len(details) > 0 else "정보 없음"
-                        category = details[1].text.strip() if len(details) > 1 else "정보 없음"
+                        category = item.find_element(By.CSS_SELECTOR, '.txt_desc').text.strip()
                         
                         job_list.append({
                             '공고명': title,
@@ -68,7 +66,6 @@ def crawl_kakaobank():
                         print(f"  ㄴ 개별 채용 정보 파싱 오류: {e}")
                         continue
             
-            # ⭐️ 4. 5초 내에 공고가 없으면(TimeoutException) 다음 카테고리로 넘어갑니다.
             except TimeoutException:
                 print(f"  -> '{job_type}' 카테고리에 진행중인 공고가 없습니다.")
                 continue
@@ -77,7 +74,6 @@ def crawl_kakaobank():
         print(f"크롤링 프로세스 중 오류 발생: {e}")
         return []
 
-    # ⭐️ 5. 모든 작업이 끝난 후 드라이버를 한 번만 종료합니다.
     finally:
         if driver:
             driver.quit()

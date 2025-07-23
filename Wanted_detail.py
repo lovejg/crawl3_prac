@@ -95,6 +95,20 @@ def crawl_job_details(url):
         job_details['혜택 및 복지'] = details[4].text.strip() if len(details) > 4 else '정보 없음'
         job_details['채용 전형'] = details[5].text.strip() if len(details) > 5 else '정보 없음'
         
+        try:
+            # 태그가 포함된 <article> 영역을 선택
+            tags_article = soup.select_one("article.CompanyTags_CompanyTags__OpNto")
+            if tags_article:
+                # 각 태그 버튼에서 'data-tag-name' 속성 값을 추출
+                tag_buttons = tags_article.select("button[data-attribute-id='company__tag__click']")
+                tags_list = [button.get('data-tag-name') for button in tag_buttons if button.get('data-tag-name')]
+                job_details['회사 태그'] = ', '.join(tags_list) # 리스트를 하나의 문자열로 합침
+            else:
+                job_details['회사 태그'] = '정보 없음'
+        except Exception as e:
+            print(f"태그 정보 추출 오류: {e}")
+            job_details['회사 태그'] = '정보 없음'
+        
         print("모든 정보 추출 완료.")
         return job_details
 
