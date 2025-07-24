@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 from bs4 import NavigableString
-import datetime
 
 keyURL = input("URL 입력: ")
 print("크롤링 시작")
@@ -9,13 +8,8 @@ print("크롤링 시작")
 try:
     soup = requests.get(keyURL, headers={'User-Agent': 'Mozilla/5.0'})
     html = BeautifulSoup(soup.text, 'html.parser').select_one("section#container")
-    # print(html) # 테스트
     
     main_info = html.select_one('section.secReadSummary')
-    # print(main_info) # 테스트
-    
-    nowDate = datetime.datetime.now().strftime('%Y-%m-%d')
-    print(f"현재 날짜: {nowDate}")
     
     company = main_info.select_one('span.coName').text.strip() # 회사 이름
     print(f"회사 이름: {company}")
