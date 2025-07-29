@@ -76,8 +76,8 @@ def crawl_kakaopay():
                 job_list.append({
                     '회사명': '카카오페이',
                     '공고명': title,
-                    '경력': career,
-                    '근무형태': work_type,
+                    '경력': career, # 경력 요건
+                    '근무형태': work_type, # 정규직 여부
                     '링크': link
                 })
 

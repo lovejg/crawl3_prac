@@ -20,3 +20,26 @@
 
 
 공통: 회사 이름, 공고 제목, 상세페이지 URL, 경력, 학력, 정규직 여부, 회사 위치, 마감일, 장점/복지, 카테고리/기술 스택 + 상세페이지 (+ 부족하면 기업정보도 넣기)
+
+- 각 페이지별 DB 형식
+잡코리아
+title(공고 제목), company_name(회사 이름), company_location(회사 위치), is_regular(정규직 여부),
+require_career(경력 요건), require_education(학력 요건), advantage(장점 및 복지), detail_url(상세페이지 url), expire_date(마감 날짜)
+
+
+원티드
+title(공고 제목), company_name(회사 이름), company_location(회사 위치),
+require_career(경력 요건), require_skill(기술 스택), detail_url(상세페이지 url), detail(상세 정보), expire_date(마감 날짜)
+
+
+직행
+title(공고 제목), company_name(회사 이름), company_location(회사 위치), is_regular(정규직 여부), require_career(경력 요건), 
+require_education(학력 요건), require_skill(기술 스택), detail_url(상세페이지 url), create_date(게시 날짜), expire_date(마감 날짜)
+
+
+카카오페이(상세 정보에 거의 다 들어가있음 + 회사위치는 그냥 카카오페이 위치로 고정시키는게 나을듯)
+title(공고 제목), company_name(회사 이름),  is_regular(정규직 여부), require_career(경력 요건), detail_url(상세페이지 url), detail(상세 정보)
+
+
+카카오뱅크(상세 정보에 거의 다 들어가있음 + 회사 이름이랑 위치는 고정)
+title(공고 제목), company_name(회사 이름), category(카테고리), detail_url(상세페이지 url), expire_date(마감 날짜)

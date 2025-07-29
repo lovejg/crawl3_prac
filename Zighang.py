@@ -74,7 +74,7 @@ def crawl_zighang(keyword):
                     '회사명': company,
                     '공고명': title,
                     '링크': link,
-                    '상세정보': formatted_details,
+                    '상세정보': formatted_details, # 7~10년차(경력 요건), 정규직(정규직 여부), 학사(학력 요건), 서울(회사 위치)
                     '데드라인': deadline
                 }
                 job_list.append(job_data)

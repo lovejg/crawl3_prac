@@ -43,7 +43,7 @@ try:
     work_type = header.select("div.text-black")[3].text.strip() # 근무형태
     print(f"근무형태: {work_type}")
     
-    stack = header.select("div.text-black")[4].text.strip() # 직군
+    stack = header.select("div.text-black")[4].text.strip() # 직군(기술 스택)
     print(f"직군: {stack}")
     
             

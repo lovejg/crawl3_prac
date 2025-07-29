@@ -29,8 +29,6 @@ def crawl_wanted(keyword):
         selector = 'div.JobCard_container__zQcZs'
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, selector))) # 컨테이너 뼈대 로딩
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);") # 페이지 끝까지 스크롤해서 추가 데이터 요청(무한 스크롤 고려)
-        
-        time.sleep(3) # 스크롤 후 새로운 컨텐츠가 JS에 의해 채워질 시간을 기다리기
 
         items = driver.find_elements(By.CSS_SELECTOR, selector)
         

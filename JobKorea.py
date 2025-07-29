@@ -75,15 +75,10 @@ for n in range(1, int(pageNum)+1):
                 continue # 정보가 하나라도 부족하면 일단 해당 공고 패스
             
             career = info_list[0].text.strip() # 경력
-            print(career)
             edu_career = info_list[1].text.strip() # 학력
-            print(edu_career)
             regular = info_list[2].text.strip() # 정규직 여부
-            print(regular)
             location = info_list[3].text.strip() # 위치
-            print(location)
             deadline = info_list[4].text.strip() # 마감
-            print(deadline)
             
             benefit_tags = job.select('span.Typography_variant_size13__344nw28') # 장점(태그) => 없는 공고들도 있음(빈 배열이면 없는거임)
             benefit = ', '.join([tag.text.strip() for tag in benefit_tags]) if benefit_tags else ''
