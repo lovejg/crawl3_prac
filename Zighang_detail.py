@@ -13,8 +13,6 @@ try:
     
     header = html.select_one("div:nth-child(1)")
     # print(header) # 테스트
-    # main = html.select_one("div:nth-child(4)") # 얘는 메인 내용이 사진으로 돼 있어서 크롤링 하는게 의미가 없을듯...? 어쩌지
-    # print(main) # 테스트
     
     nowDate = datetime.datetime.now().strftime('%Y-%m-%d') 
     print(f"현재 날짜: {nowDate}")

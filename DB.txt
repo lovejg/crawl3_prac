@@ -37,9 +37,9 @@ title(공고 제목), company_name(회사 이름), company_location(회사 위�
 require_education(학력 요건), require_skill(기술 스택), detail_url(상세페이지 url), create_date(게시 날짜), expire_date(마감 날짜)
 
 
-카카오페이(상세 정보에 거의 다 들어가있음 + 회사위치는 그냥 카카오페이 위치로 고정시키는게 나을듯)
-title(공고 제목), company_name(회사 이름),  is_regular(정규직 여부), require_career(경력 요건), detail_url(상세페이지 url), detail(상세 정보)
+카카오페이(상세 정보에 거의 다 들어가있음 + 회사 이름 카카오페이로 고정하고, 회사위치는 그냥 카카오페이 위치로 고정시키는게 나을듯)
+title(공고 제목), company_name(회사 이름), company_location(회사 위치), is_regular(정규직 여부), require_career(경력 요건), detail_url(상세페이지 url), detail(상세 정보)
 
 
 카카오뱅크(상세 정보에 거의 다 들어가있음 + 회사 이름이랑 위치는 고정)
-title(공고 제목), company_name(회사 이름), category(카테고리), detail_url(상세페이지 url), expire_date(마감 날짜)
+title(공고 제목), company_name(회사 이름), company_location(회사 위치), category(카테고리), detail_url(상세페이지 url), detail(상세 정보), expire_date(마감 날짜)

@@ -41,7 +41,7 @@ def crawl_job_details(url):
             job_details['공고 제목'] = "정보 없음"
 
 
-        # 섹션별 상세 내용 추출 및 필터링
+        # 아래 전체가 상세 정보(detail)
         try:
             main_content_selector = "div.ql-editor"
             editor_element = driver.find_element(By.CSS_SELECTOR, main_content_selector)

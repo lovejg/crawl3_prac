@@ -28,7 +28,6 @@ def crawl_zighang(keyword):
         print("직행 페이지 로딩 중...")
         selector = 'a[href^="/recruitment/"]'
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
-        time.sleep(2)
 
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(2)

@@ -56,8 +56,7 @@ def crawl_job_details(url):
         except NoSuchElementException:
             job_details['마감일'] = "정보 없음"
 
-        # 2. 상세 설명 섹션 추출 ('Recruiter Says', '담당할 업무' 등)
-        # 'desc_cont' 클래스를 가진 모든 설명 컨테이너를 찾음
+        # 2. 상세 정보
         desc_containers = detail_container.find_elements(By.CSS_SELECTOR, 'div.desc_cont')
 
         for container in desc_containers:
