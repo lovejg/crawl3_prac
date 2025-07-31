@@ -17,13 +17,12 @@ def create_connection(config):
     connection = None
     try:
         connection = mysql.connector.connect(**config)
-        print("🎉 MySQL DB에 성공적으로 연결되었습니다.")
+        print("MySQL DB에 성공적으로 연결되었습니다.")
     except Error as e:
         print(f"DB 연결 중 오류 발생: {e}")
     return connection
 
 def crawl_detail_page(detail_url):
-    """상세페이지에서 추가 정보를 크롤링 (필요시 활용 가능)"""
     try:
         time.sleep(1)
         soup = requests.get(detail_url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -65,7 +64,7 @@ def insert_job_data(cursor, data):
     """
     try:
         cursor.execute(query, data)
-        print(f"✅ 데이터 삽입 완료: {data[0]}")
+        print(f"데이터 삽입 완료: {data[0]}")
     except Error as e:
         print(f"데이터 삽입 중 오류 발생: {e}")
 
@@ -83,9 +82,9 @@ total_jobs = 0
 
 for n in range(1, int(pageNum)+1):
     try:
-        print(f"\n📄 {n}페이지 크롤링 중...")
+        print(f"{n}페이지 크롤링 중...")
         soup = requests.get('https://www.jobkorea.co.kr/Search/?stext={}&Page_No={}'.format(keyword, str(n)),
-                           headers={'User-Agent': 'Mozilla/5.0'})
+                            headers={'User-Agent': 'Mozilla/5.0'})
         html = BeautifulSoup(soup.text, 'html.parser').select_one(".Tabs_content__1cw1bssl")
         
         if not html:
@@ -96,16 +95,13 @@ for n in range(1, int(pageNum)+1):
         
         for job in jobs:
             try:
-                # 기본 정보 추출
                 company = job.select_one('span.Typography_variant_size16__344nw26').text.strip()
                 title = job.select_one('a.sn28bt0').text.strip()
                 url = job.find('a')['href']
                 
-                # 전체 URL로 변환
                 if not url.startswith('http'):
                     url = 'https://www.jobkorea.co.kr' + url
                 
-                # 경력, 학력 등 정보 추출
                 items = job.select('span.Typography_color_gray700__344nw2m')
                 start_index = -1
                 for i, item in enumerate(items):
@@ -139,17 +135,16 @@ for n in range(1, int(pageNum)+1):
                 total_jobs += 1
                 
             except Exception as e:
-                print(f"  ❌ 개별 공고 처리 중 오류: {e}")
+                print(f"개별 공고 처리 중 오류: {e}")
                 continue
                 
     except Exception as e:
         print(f"{n}페이지 크롤링 중 오류 발생: {e}")
         continue
 
-# 최종 저장
 conn.commit()
 cursor.close()
 conn.close()
 
-print(f"\n🎉 모든 크롤링 및 DB 저장이 완료되었습니다!")
-print(f"📊 총 {total_jobs}개의 채용공고가 처리되었습니다.")
+print(f"모든 크롤링 및 DB 저장이 완료되었습니다!")
+print(f"총 {total_jobs}개의 채용공고가 처리되었습니다.")
