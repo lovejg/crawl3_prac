@@ -1,27 +1,28 @@
 공통: 회사 이름, 공고 제목, 상세페이지 URL, 경력, 학력, 정규직 여부, 회사 위치, 마감일, 장점/복지, 카테고리/기술 스택 + 상세페이지 (+ 부족하면 기업정보도 넣기)
 
 - 각 페이지별 DB 형식
-잡코리아
+잡코리아 => request만 써서 최적화 필요 없음
 title(공고 제목), company_name(회사 이름), company_location(회사 위치), is_regular(정규직 여부),
 require_career(경력 요건), require_education(학력 요건), advantage(장점 및 복지), detail_url(상세페이지 url), expire_date(마감 날짜)
 
 
-원티드
+원티드 12개씩 => 최적화 완료
 title(공고 제목), company_name(회사 이름), company_location(회사 위치),
 require_career(경력 요건), detail_url(상세페이지 url), detail(상세 정보), expire_date(마감 날짜)
 
 
-직행
+직행 44개씩 => 최적화 완료
 title(공고 제목), company_name(회사 이름), company_location(회사 위치), is_regular(정규직 여부), require_career(경력 요건), 
 require_education(학력 요건), require_skill(기술 스택), detail_url(상세페이지 url), create_date(게시 날짜), expire_date(마감 날짜)
 
 
-카카오페이(상세 정보에 거의 다 들어가있음 + 회사 이름 카카오페이로 고정하고, 회사위치는 그냥 카카오페이 위치로 고정시키는게 나을듯)
+카카오페이(상세 정보에 거의 다 들어가있음 + 회사 이름 카카오페이로 고정하고, 회사위치는 그냥 카카오페이 위치로 고정시키는게 나을듯) 랜덤한데 일단 현재 기준 14개 => 최적화 완료
 title(공고 제목), company_name(회사 이름), company_location(회사 위치), is_regular(정규직 여부), require_career(경력 요건), detail_url(상세페이지 url), detail(상세 정보)
 
 
-카카오뱅크(상세 정보에 거의 다 들어가있음 + 회사 이름이랑 위치는 고정)
+카카오뱅크(상세 정보에 거의 다 들어가있음 + 회사 이름이랑 위치는 고정) 랜덤한데 일단 현재 기준 45개 => 최적화 완료
 title(공고 제목), company_name(회사 이름), company_location(회사 위치), category(카테고리), detail_url(상세페이지 url), detail(상세 정보), expire_date(마감 날짜)
+
 
 - 참고 명령어
 도커 빌드: docker-compose up --build
@@ -29,3 +30,7 @@ mysql 켜기: docker exec -it mysql mysql -u root -p recruit
 현재 table 확인: USE recruit; -> SHOW TABLES;
 table 비우기: TRUNCATE TABLE recruitment;
 UTF8로 변경(이거 안하면 한글 깨지니까 필수): SET NAMES utf8mb4;
+
+추가로 build 할 때 gradlew 관련 오류 뜨면 cd springserver -> chmod +x gradlew 해주면 됨
+
+그리고 새로 clone 받았으면 .env에서 PORT를 3307로, 그리고 docker-compose.yml에서 ports를 3307:3306으로 바꿔주기

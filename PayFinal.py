@@ -12,7 +12,7 @@ from selenium.common.exceptions import TimeoutException
 import mysql.connector
 from mysql.connector import Error
 
-# --- 1. DB 설정 및 연결 함수 ---
+# --- DB 설정 및 연결 함수 ---
 db_config = {
     'host': 'localhost',
     'user': 'root',
@@ -23,13 +23,13 @@ db_config = {
 
 def create_connection(config):
     """DB 연결 생성"""
-    connection = None
     try:
         connection = mysql.connector.connect(**config)
-        print("🎉 MySQL DB에 성공적으로 연결되었습니다.")
+        print("DB 연결 성공")
+        return connection
     except Error as e:
-        print(f"DB 연결 중 오류 발생: {e}")
-    return connection
+        print(f"DB 연결 실패: {e}")
+        return None
 
 def insert_job_data(cursor, data):
     """크롤링한 데이터를 DB에 삽입"""
@@ -43,131 +43,135 @@ def insert_job_data(cursor, data):
     """
     try:
         cursor.execute(query, data)
-        print(f"  ✅ [DB 저장/업데이트 완료] {data[0]}")
+        print(f"✅ DB 저장 완료: {data[0]}")
     except Error as e:
-        print(f"  ❌ [DB 저장 실패] {data[0]} - {e}")
+        print(f"❌ DB 저장 실패: {data[0]} - {e}")
 
-# --- 2. 상세 페이지 크롤링 함수 (최적화) ---
-def scrape_detail_page(driver):
-    """
-    현재 드라이버가 위치한 페이지의 상세 정보를 크롤링.
-    빠른 처리를 위해 단일 시도로 최적화
-    """
+def scrape_detail_page(driver, url):
+    """상세 페이지 크롤링"""
     try:
-        # 핵심 요소 로딩 대기 (시간 단축)
-        time.sleep(2)
+        driver.get(url)
+        time.sleep(3)
         
-        # 제목 추출 - 가장 확실한 셀렉터부터 시도
+        # 제목 추출
         title = None
-        try:
-            title_element = WebDriverWait(driver, 8).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "span.eLNvYc"))
-            )
-            title = title_element.text.strip()
-        except:
-            # 백업 방법
+        title_selectors = [
+            "span.eLNvYc",
+            "h1",
+            "h2"
+        ]
+        
+        for selector in title_selectors:
             try:
-                title_element = driver.find_element(By.TAG_NAME, "h1")
+                title_element = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, selector))
+                )
                 title = title_element.text.strip()
+                if title:
+                    break
             except:
-                pass
+                continue
         
         if not title:
             return None, None
         
-        print(f"    제목: {title}")
-        
-        # 상세 정보 파싱 - 효율적인 방법 우선 시도
+        # 상세 정보 추출
         detail_text = ""
         
+        # 방법 1: ql-editor 영역 JavaScript 파싱
         try:
-            # 메인 콘텐츠 영역 찾기
             editor_element = driver.find_element(By.CSS_SELECTOR, "div.ql-editor")
-            all_children = editor_element.find_elements(By.XPATH, "./*")
             
-            if all_children:
-                print(f"    구조화된 콘텐츠 파싱 중... (요소 수: {len(all_children)})")
+            script = """
+            var element = arguments[0];
+            var text = '';
+            var walker = document.createTreeWalker(
+                element,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+            var node;
+            while(node = walker.nextNode()) {
+                if(node.textContent.trim()) {
+                    text += node.textContent.trim() + '\\n';
+                }
+            }
+            return text;
+            """
+            detail_text = driver.execute_script(script, editor_element)
+            
+            if detail_text.strip():
+                detail_text = detail_text.strip()
+            else:
+                raise Exception("빈 텍스트")
                 
-                job_details_dict = {}
-                current_section_title = None
-                current_section_content = []
+        except:
+            # 방법 2: 구조화된 파싱
+            try:
+                editor_element = driver.find_element(By.CSS_SELECTOR, "div.ql-editor")
+                all_children = editor_element.find_elements(By.XPATH, "./*")
                 
-                # 중요한 섹션만 필터링
-                important_keywords = [
-                    "담당업무", "업무", "역할", "책임", "주요업무",
-                    "자격요건", "우대사항", "필수", "우대", "요구사항",
-                    "근무조건", "근무환경", "혜택", "복리후생",
-                    "채용절차", "전형절차", "지원"
-                ]
-
+                sections = {}
+                current_title = None
+                current_content = []
+                
                 for element in all_children:
-                    if element.tag_name in ['h1', 'h2', 'h3', 'h4']:
-                        # 이전 섹션 저장 (중요한 섹션만)
-                        if current_section_title and current_section_content:
-                            if any(keyword in current_section_title for keyword in important_keywords):
-                                job_details_dict[current_section_title] = "\n".join(current_section_content).strip()
+                    if element.tag_name.lower() in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+                        if current_title and current_content:
+                            sections[current_title] = '\n'.join(current_content)
                         
-                        # 새 섹션 시작
-                        current_section_title = element.text.strip().replace("⎥", "").strip()
-                        current_section_content = []
+                        current_title = element.text.strip().replace("⎥", "").strip()
+                        current_content = []
                     else:
                         text = element.text.strip()
-                        if text and len(text) > 3:  # 너무 짧은 텍스트 제외
-                            current_section_content.append(text)
+                        if text:
+                            current_content.append(text)
                 
-                # 마지막 섹션 저장
-                if current_section_title and current_section_content:
-                    if any(keyword in current_section_title for keyword in important_keywords):
-                        job_details_dict[current_section_title] = "\n".join(current_section_content).strip()
-
-                # 구조화된 텍스트 조합
-                if job_details_dict:
-                    for key, value in job_details_dict.items():
-                        if key and value:
-                            detail_text += f"## {key}\n{value}\n\n"
-                    print(f"    구조화된 콘텐츠 추출 완료 (섹션 수: {len(job_details_dict)})")
+                if current_title and current_content:
+                    sections[current_title] = '\n'.join(current_content)
+                
+                if sections:
+                    for title, content in sections.items():
+                        if title and content:
+                            detail_text += f"## {title}\n{content}\n\n"
                 else:
-                    print("    중요한 섹션을 찾지 못함")
-        
-        except Exception as e:
-            print(f"    구조화 파싱 실패: {e}")
-        
-        # 구조화된 파싱이 실패했거나 내용이 부족한 경우에만 전체 텍스트 추출
-        if not detail_text.strip():
-            print("    전체 페이지 텍스트 추출로 전환")
-            try:
-                # 핵심 콘텐츠 영역만 추출
-                main_content = driver.find_element(By.CSS_SELECTOR, "div.ql-editor")
-                soup = BeautifulSoup(main_content.get_attribute('innerHTML'), 'html.parser')
-                
-                # 불필요한 요소 제거
-                for unwanted in soup.find_all(['script', 'style', 'nav', 'header', 'footer']):
-                    unwanted.decompose()
-                
-                # 텍스트 정리
-                text = soup.get_text()
-                lines = [line.strip() for line in text.splitlines() if line.strip()]
-                detail_text = '\n'.join(lines)
-                
-                # 길이 제한 (필요한 부분만)
-                if len(detail_text) > 3000:
-                    detail_text = detail_text[:3000] + "\n...(이하 생략)"
+                    raise Exception("섹션 없음")
+            
+            except:
+                # 방법 3: 전체 페이지 텍스트 추출
+                try:
+                    container = driver.find_element(By.CSS_SELECTOR, "div.ql-editor")
+                    soup = BeautifulSoup(container.get_attribute('innerHTML'), 'html.parser')
                     
-            except Exception as e:
-                print(f"    전체 텍스트 추출도 실패: {e}")
-                return None, None
+                    for unwanted in soup.find_all(['script', 'style', 'nav', 'header', 'footer']):
+                        unwanted.decompose()
+                    
+                    text = soup.get_text(separator='\n', strip=True)
+                    lines = [line.strip() for line in text.split('\n') if line.strip()]
+                    detail_text = '\n'.join(lines)
+                    
+                    if not detail_text or len(detail_text) < 100:
+                        raise Exception("텍스트 없음")
+                        
+                except:
+                    return None, None
         
-        if title and detail_text.strip():
-            print(f"    ✅ 성공 - 상세내용 길이: {len(detail_text)}")
-            return title, detail_text.strip()
+        # 텍스트 정리
+        if detail_text:
+            detail_text = '\n'.join([line for line in detail_text.split('\n') if line.strip()])
+            
+            if len(detail_text) > 5000:
+                detail_text = detail_text[:5000] + "\n...(내용이 길어 일부 생략됨)"
+            
+            return title, detail_text
         else:
             return None, None
             
     except Exception as e:
-        print(f"    ❌ 크롤링 실패: {e}")
+        print(f"❌ 크롤링 실패: {e}")
         return None, None
 
-# --- 3. 메인 실행 로직 ---
 def main():
     conn = create_connection(db_config)
     if not conn:
@@ -182,100 +186,103 @@ def main():
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
     options.add_argument(f"user-agent={UserAgent().chrome}")
+    options.add_argument("--window-size=1920,1080")
     
     driver = None
     try:
-        print("카카오페이 채용 정보 크롤링을 시작합니다.")
+        print("카카오페이 채용 정보 크롤링 시작")
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         
         url = 'https://kakaopay.career.greetinghr.com/ko/main?occupations=기술'
         driver.get(url)
-        main_window = driver.current_window_handle
         
-        print("메인 페이지 로딩 대기 중...")
-        time.sleep(3)  # 대기시간 단축
+        print("메인 페이지 로딩 중...")
+        time.sleep(5)
 
-        # 스크롤 다운 (최적화)
-        print("페이지 끝까지 스크롤 중...")
+        # 스크롤 다운
+        print("전체 공고 로딩 중...")
         last_height = driver.execute_script("return document.body.scrollHeight")
-        scroll_attempts = 0
-        max_scroll_attempts = 5  # 횟수 줄임
         
-        while scroll_attempts < max_scroll_attempts:
+        for _ in range(8):
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(1.5)  # 대기시간 단축
+            time.sleep(2)
             new_height = driver.execute_script("return document.body.scrollHeight")
             if new_height == last_height:
                 break
             last_height = new_height
-            scroll_attempts += 1
 
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         items = soup.select("ul.ffGmZN > a")
         
         if not items:
-            print("채용 공고 목록을 찾지 못했습니다. 페이지 구조를 확인해주세요.")
+            print("채용 공고를 찾을 수 없습니다.")
             return
 
         jobs_to_crawl = []
         for item in items:
             try:
-                link = f"https://kakaopay.career.greetinghr.com{item['href']}"
-                info_items = item.select('.gAEjfw span')
+                href = item.get('href', '')
+                if not href:
+                    continue
+                    
+                link = f"https://kakaopay.career.greetinghr.com{href}"
+                
                 career = "정보 없음"
                 work_type = "정보 없음"
-                for info in info_items:
-                    text = info.get_text(strip=True)
-                    if '년' in text or '신입' in text or '무관' in text:
-                        career = text
-                    elif '정규' in text or '계약' in text:
-                        work_type = text
-                jobs_to_crawl.append({'url': link, 'career': career, 'work_type': work_type})
+                
+                try:
+                    info_items = item.select('.gAEjfw span')
+                    for info in info_items:
+                        text = info.get_text(strip=True)
+                        if '년' in text or '신입' in text or '무관' in text:
+                            career = text
+                        elif '정규' in text or '계약' in text:
+                            work_type = text
+                except:
+                    pass
+                
+                jobs_to_crawl.append({
+                    'url': link, 
+                    'career': career, 
+                    'work_type': work_type
+                })
+                
             except Exception as e:
-                print(f"공고 정보 파싱 중 오류: {e}")
                 continue
         
-        print(f"\n총 {len(jobs_to_crawl)}개의 채용 공고를 발견했습니다. 상세 정보 크롤링을 시작합니다.")
+        print(f"총 {len(jobs_to_crawl)}개 공고 발견")
+        print("상세 정보 수집 중...")
         
         success_count = 0
         for i, job in enumerate(jobs_to_crawl):
-            print(f"\n({i+1}/{len(jobs_to_crawl)}) 공고 처리 중...")
-            print(f"URL: {job['url']}")
+            print(f"({i+1}/{len(jobs_to_crawl)}) 처리 중...")
             
             try:
-                # 새 탭에서 상세 페이지 열기
-                driver.switch_to.new_window('tab')
-                driver.get(job['url'])
-                
-                detail_title, detail_text = scrape_detail_page(driver)
-
-                # 작업 후 새 탭 닫고 메인 탭으로 돌아오기
-                driver.close()
-                driver.switch_to.window(main_window)
+                detail_title, detail_text = scrape_detail_page(driver, job['url'])
 
                 if detail_title and detail_text:
                     final_data = (
-                        detail_title, '카카오페이', '경기도 성남시 분당구 판교역로 152 (백현동) 알파돔타워 12층',
-                        job['work_type'], job['career'], job['url'], detail_text
+                        detail_title, 
+                        '카카오페이', 
+                        '경기도 성남시 분당구 판교역로 152 (백현동) 알파돔타워 12층',
+                        job['work_type'], 
+                        job['career'], 
+                        job['url'], 
+                        detail_text
                     )
                     insert_job_data(cursor, final_data)
                     success_count += 1
                 else:
-                    print(f"  - 상세 정보 수집 실패. 건너뜁니다.")
+                    print(f"❌ 상세 정보 수집 실패")
                     
             except Exception as e:
-                print(f"  - 공고 처리 중 오류 발생: {e}")
-                # 에러 발생 시에도 메인 탭으로 돌아가기
-                try:
-                    driver.switch_to.window(main_window)
-                except:
-                    pass
+                print(f"❌ 처리 실패: {e}")
         
         print(f"\n크롤링 완료: {success_count}/{len(jobs_to_crawl)}개 성공")
 
     except Exception as e:
-        print(f"전체 크롤링 과정에서 오류 발생: {e}")
+        print(f"전체 크롤링 오류: {e}")
     finally:
         if driver:
             driver.quit()
@@ -283,7 +290,7 @@ def main():
             conn.commit()
             cursor.close()
             conn.close()
-            print("\n모든 작업 완료. DB 연결을 종료합니다.")
+            print("작업 완료")
 
 if __name__ == "__main__":
     main()
